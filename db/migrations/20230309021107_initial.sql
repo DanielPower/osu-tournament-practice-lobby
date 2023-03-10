@@ -1,8 +1,8 @@
 -- migrate:up
 create table users (
-  id integer,
-  discord_id integer,
-  osu_id integer
+  id serial primary key,
+  discord_id text,
+  osu_id text
 );
 
 -- migrate:down

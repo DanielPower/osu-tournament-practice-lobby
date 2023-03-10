@@ -1,6 +1,7 @@
-import { Interaction } from "discord.js";
-import { REST, Routes } from "discord.js";
-import { Client, GatewayIntentBits } from "discord.js";
+import * as db from "zapatos/db";
+import type * as s from "zapatos/schema";
+import pool from "./pool.js";
+import { Interaction, REST, Routes, Client, GatewayIntentBits } from "discord.js";
 const client = new Client({ intents: [GatewayIntentBits.Guilds] });
 
 const commands = [
@@ -12,14 +13,18 @@ const commands = [
     name: "auth",
     description: "Link with your osu! account",
   },
+  {
+    name: "whoami",
+    description: "Identify your user",
+  },
 ];
 
-const rest = new REST({ version: "10" }).setToken(process.env.DISCORD_TOKEN);
+const rest = new REST({ version: "10" }).setToken(process.env.DISCORD_TOKEN!);
 
 try {
   console.log("Started refreshing application (/) commands.");
 
-  await rest.put(Routes.applicationCommands(process.env.APPLICATION_ID), {
+  await rest.put(Routes.applicationCommands(process.env.DISCORD_ID!), {
     body: commands,
   });
 
@@ -33,7 +38,9 @@ client.on("ready", () => {
 });
 
 client.on("interactionCreate", async (interaction: Interaction) => {
-  if (!interaction.isChatInputCommand()) return;
+  if (!interaction.isChatInputCommand()) {
+    return;
+  }
 
   if (interaction.commandName === "ping") {
     await interaction.reply("Pong!");
@@ -46,11 +53,29 @@ client.on("interactionCreate", async (interaction: Interaction) => {
         "https://osu.ppy.sh/oauth/authorize" +
         `?client_id=${process.env.OSU_CLIENT_ID}` +
         `&state=${interaction.user.id}` +
-        `&redirect_uri=${process.env.AUTH_URL}` +
+        `&redirect_uri=${process.env.BASE_URL}/auth` +
         `&response_type=code` +
         `) to authenticate your osu! profile`,
     });
   }
+  if (interaction.commandName === "whoami") {
+    const users = await db.sql<
+      s.users.SQL,
+      s.users.Selectable[]
+    >`SELECT ${"osu_id"} FROM ${"users"} WHERE ${"discord_id"} = ${db.param(
+      interaction.user.id,
+    )};`.run(pool);
+
+    if (!users.length) {
+      await interaction.reply(
+        "Your osu! account is not linked.\nPlease use the /auth command",
+      );
+      return;
+    }
+    await interaction.reply(
+      `Discord ID: ${interaction.user.id}\nosu! ID: ${users[0].osu_id}`,
+    );
+  }
 });
 
-client.login(process.env.DISCORD_TOKEN);
+await client.login(process.env.DISCORD_TOKEN);

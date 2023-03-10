@@ -6,7 +6,7 @@ on:
       - master
 
 jobs:
-  prettier:
+  eslint:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -21,4 +21,4 @@ jobs:
       - name: Install packages
         run: npm ci
       - name: ESLint
-        run: npm run prettier
+        run: npm run eslint
