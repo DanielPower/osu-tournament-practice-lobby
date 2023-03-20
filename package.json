@@ -1,7 +1,7 @@
 {
-  "name": "osu-tournament-practice-lobby",
+  "name": "osu-king-of-the-hill",
   "version": "0.0.0",
-  "description": "Lobby management bot for for osu! game",
+  "description": "King of the Hill meta-game for osu!",
   "type": "module",
   "devDependencies": {
     "@types/node": "^18.14.6",

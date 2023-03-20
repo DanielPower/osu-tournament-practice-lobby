@@ -1,1 +1,1 @@
-# osu! Tournament Practice Lobby
+# osu! King of the Hill
